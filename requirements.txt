@@ -1,0 +1,4 @@
+# No external pip dependencies.
+# Requires UCSF Chimera (internal 'chimera' module).
+
+
