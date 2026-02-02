@@ -1,8 +1,9 @@
 # =============================================================================
-# Water Counting Script v2.1
+# Water Counting Script v2.2
 # Counts water molecules on either side of a plane defined by 3 SELECTED atoms.
 # Only counts waters within a specified radius of the plane center.
 # Iterates through the entire trajectory.
+# Determines which side is most populated overall.
 #
 # Usage:
 #   1. Open your trajectory in UCSF Chimera.
@@ -33,8 +34,6 @@ p_atom2 = plane_sel_atoms[1]
 p_atom3 = plane_sel_atoms[2]
 
 # 2. Find the primary molecule
-# We assume the plane atoms belong to the relevant molecule or the first molecule is the target.
-# A safe bet is to look for the molecule containing the plane atoms, or just the first molecule with waters.
 mol_models = openModels.list(modelTypes=[Molecule])
 if not mol_models:
     raise RuntimeError("No Molecule models found. Load your structure/trajectory first.")
@@ -44,8 +43,6 @@ mol = p_atom1.molecule
 print "Processing molecule: %s (ID: #%d)" % (mol.name, mol.id)
 
 # 3. Identify water residues
-# We pre-calculate the list of water residues to iterate over.
-# This list contains the Residue objects. Their atom coordinates update when the frame changes.
 water_residues = []
 for r in mol.residues:
     if r.type.strip().upper() == water_resname.upper():
@@ -53,19 +50,13 @@ for r in mol.residues:
 
 print "Found %d water residues (%s)." % (len(water_residues), water_resname)
 
-# 4. Prepare output file
-out_path = os.path.abspath(output_filename)
-try:
-    f_out = open(out_path, "w")
-    # Header
-    f_out.write("Frame\tSideA\tSideB\tTotal_In_Radius\n")
-    print "Writing results to: %s" % out_path
-except IOError:
-    raise RuntimeError("Could not open output file: %s" % out_path)
-
 # ---- Analysis Loop ----
 frames = sorted(mol.coordSets.keys())
 print "Analyzing %d frames with search radius %.1f A..." % (len(frames), search_radius)
+
+results_data = [] # List to store (frame, side_a, side_b)
+grand_total_a = 0
+grand_total_b = 0
 
 for frame in frames:
     mol.activeCoordSet = mol.coordSets[frame]
@@ -98,7 +89,7 @@ for frame in frames:
 
     if n_len == 0.0:
         print "Warning: Frame %d has collinear plane atoms. Skipping." % frame
-        f_out.write("%d\tNaN\tNaN\t0\n" % frame)
+        results_data.append((frame, -1, -1)) # Mark as invalid
         continue
 
     n_hat = (nx/n_len, ny/n_len, nz/n_len)
@@ -107,7 +98,6 @@ for frame in frames:
     # 4. Count Waters within Radius
     side_a = 0
     side_b = 0
-    total_in_radius = 0
 
     for r in water_residues:
         # Calculate geometric center of the water residue
@@ -132,9 +122,7 @@ for frame in frames:
         if dist_sq > search_radius**2:
             continue
 
-        total_in_radius += 1
-
-        # Signed distance to plane: d = n_hat . (water_pos - r0)
+        # Signed distance to plane
         d = (wx - r0[0])*n_hat[0] + (wy - r0[1])*n_hat[1] + (wz - r0[2])*n_hat[2]
 
         if d >= 0:
@@ -142,14 +130,47 @@ for frame in frames:
         else:
             side_b += 1
 
-    # Output result
+    # Accumulate
+    grand_total_a += side_a
+    grand_total_b += side_b
+
+    # Store
+    results_data.append((frame, side_a, side_b))
+
+    # Progress
     if frame % 10 == 0 or frame == frames[0] or frame == frames[-1]:
-        print "Frame %d: Side A = %d, Side B = %d (Total in radius: %d)" % (frame, side_a, side_b, total_in_radius)
+        print "Frame %d: Side A = %d, Side B = %d" % (frame, side_a, side_b)
 
-    f_out.write("%d\t%d\t%d\t%d\n" % (frame, side_a, side_b, total_in_radius))
+# ---- Result Writing ----
 
-    if frame % 50 == 0:
-        f_out.flush()
+# Determine winner
+winner_text = ""
+if grand_total_a > grand_total_b:
+    winner_text = "The side-a is the most water populated"
+elif grand_total_b > grand_total_a:
+    winner_text = "The side-b is the most water populated"
+else:
+    winner_text = "Both sides are equally populated"
 
-f_out.close()
-print "Analysis complete. Results saved to %s" % output_filename
+summary_line = "# %s (Total A: %d, Total B: %d)\n" % (winner_text, grand_total_a, grand_total_b)
+print "\nAnalysis Complete."
+print summary_line
+
+# Write to file
+out_path = os.path.abspath(output_filename)
+try:
+    f_out = open(out_path, "w")
+    f_out.write(summary_line)
+    f_out.write("Frame\tSideA\tSideB\n")
+
+    for row in results_data:
+        frame, a, b = row
+        if a == -1:
+            f_out.write("%d\tNaN\tNaN\n" % frame)
+        else:
+            f_out.write("%d\t%d\t%d\n" % (frame, a, b))
+
+    f_out.close()
+    print "Results saved to %s" % out_path
+except IOError:
+    raise RuntimeError("Could not open output file: %s" % out_path)
