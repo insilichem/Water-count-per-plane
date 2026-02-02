@@ -1,5 +1,5 @@
 # =============================================================================
-# Water Counting Script v2.2
+# Water Counting Script v2.3
 # Counts water molecules on either side of a plane defined by 3 SELECTED atoms.
 # Only counts waters within a specified radius of the plane center.
 # Iterates through the entire trajectory.
@@ -152,15 +152,19 @@ elif grand_total_b > grand_total_a:
 else:
     winner_text = "Both sides are equally populated"
 
-summary_line = "# %s (Total A: %d, Total B: %d)\n" % (winner_text, grand_total_a, grand_total_b)
+summary_line = "# %s (Total A: %d, Total B: %d)" % (winner_text, grand_total_a, grand_total_b)
+frame_count_line = "# Amount of frames calculated: %d" % len(frames)
+
 print "\nAnalysis Complete."
 print summary_line
+print frame_count_line
 
 # Write to file
 out_path = os.path.abspath(output_filename)
 try:
     f_out = open(out_path, "w")
-    f_out.write(summary_line)
+    f_out.write(summary_line + "\n")
+    f_out.write(frame_count_line + "\n")
     f_out.write("Frame\tSideA\tSideB\n")
 
     for row in results_data:
