@@ -1,5 +1,5 @@
 # =============================================================================
-# Water Counting Script v3.1 (with Live Visualization)
+# Water Counting Script v3.2 (with Live Visualization)
 #
 # 1. Analyzes the entire trajectory and saves statistics to a file.
 # 2. Activates a REAL-TIME VISUALIZATION mode that draws lines from the
@@ -187,7 +187,7 @@ except IOError:
 # =============================================================================
 
 class WaterVisualizer:
-    def __init__(self, mol, p_atoms, water_residues, radius):
+    def __init__(self, mol, p_atoms, water_residues, radius, c_a, c_b, c_cen):
         self.mol = mol
         self.p_atoms = p_atoms
         self.water_residues = water_residues
@@ -195,10 +195,10 @@ class WaterVisualizer:
         self.handler_name = "WaterVisUpdate"
         self.pbg_name = "WaterPlaneLinks"
 
-        # Colors
-        self.c_side_a = chimera.Color.lookup(color_side_a)
-        self.c_side_b = chimera.Color.lookup(color_side_b)
-        self.c_centroid = chimera.Color.lookup(color_centroid)
+        # Colors (Passed as arguments to avoid scope issues)
+        self.c_side_a = chimera.Color.lookup(c_a)
+        self.c_side_b = chimera.Color.lookup(c_b)
+        self.c_centroid = chimera.Color.lookup(c_cen)
 
         # Create Dummy Molecule for Centroid (needed for PseudoBonds)
         self.dummy_mol = Molecule()
@@ -309,4 +309,12 @@ if hasattr(chimera, 'water_visualizer_instance'):
     chimera.water_visualizer_instance.cleanup()
 
 # Instantiate and attach
-chimera.water_visualizer_instance = WaterVisualizer(mol, [p_atom1, p_atom2, p_atom3], water_residues, search_radius)
+chimera.water_visualizer_instance = WaterVisualizer(
+    mol,
+    [p_atom1, p_atom2, p_atom3],
+    water_residues,
+    search_radius,
+    color_side_a,
+    color_side_b,
+    color_centroid
+)
