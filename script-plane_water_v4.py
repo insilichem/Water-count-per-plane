@@ -18,8 +18,9 @@ import math
 
 # ---- Configuration ----
 water_resname = "WAT"               # Residue name for water
-output_filename = "water_count_v4.txt"
+output_filename = "water_count_v5.txt"
 search_radius = 5.0                 # Angstroms (radius from plane centroid)
+angle = 30                          # Degrees (minimum angle between plane normal and vector to water)
 
 # ---- Initialization ----
 
@@ -121,6 +122,26 @@ for frame in frames:
         dist_sq = (wx - cx)**2 + (wy - cy)**2 + (wz - cz)**2
         if dist_sq > search_radius**2:
             continue
+
+        # Vector from plane centroid to water centroid
+        vx, vy, vz = wx - cx, wy - cy, wz - cz
+        v_len = math.sqrt(vx**2 + vy**2 + vz**2)
+
+        if v_len > 0.0:
+            # Dot product with plane normal
+            dot = vx*n_hat[0] + vy*n_hat[1] + vz*n_hat[2]
+
+            # Using absolute dot product ensures we check the acute angle
+            # with the normal axis, giving symmetric filtering on both sides of the plane.
+            # This is generally more robust than computing the angle directly with individual atoms.
+            cos_theta = abs(dot) / v_len
+            if cos_theta > 1.0: cos_theta = 1.0
+
+            theta_deg = math.degrees(math.acos(cos_theta))
+
+            # Filtering criterion
+            if theta_deg < angle:
+                continue
 
         # Signed distance to plane
         d = (wx - r0[0])*n_hat[0] + (wy - r0[1])*n_hat[1] + (wz - r0[2])*n_hat[2]
