@@ -1,15 +1,16 @@
-# =============================================================================
+# ================================================================================
 # Water Counting Script v4
 # Counts water molecules on either side of a plane defined by 3 SELECTED atoms.
-# Only counts waters within a specified radius of the plane center.
+# Only counts waters within a specified radius of the plane center and angle.
 # Iterates through the entire trajectory.
 # Determines which side is most populated overall.
 #
 # Usage:
 #   1. Open your trajectory in UCSF Chimera.
 #   2. Select exactly 3 atoms to define the plane (Ctrl+Click).
-#   3. Run this script via File -> Open, or command: open script-plane_water_v2.py
-# =============================================================================
+#   3. Run this script via File -> Open, or command: open script-plane_water_v4.py
+#   4. Set the radius and angle  
+# ================================================================================
 
 from chimera import runCommand as rc, openModels, Molecule
 from chimera import selection
@@ -18,7 +19,7 @@ import math
 
 # ---- Configuration ----
 water_resname = "WAT"               # Residue name for water
-output_filename = "water_count_v5.txt"
+output_filename = "water_count_v4.txt"
 search_radius = 5.0                 # Angstroms (radius from plane centroid)
 angle = 30                          # Degrees (minimum angle between plane normal and vector to water)
 
