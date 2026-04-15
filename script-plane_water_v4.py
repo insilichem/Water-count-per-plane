@@ -21,7 +21,8 @@ import math
 water_resname = "WAT"               # Residue name for water
 output_filename = "water_count_v4.txt"
 search_radius = 5.0                 # Angstroms (radius from plane centroid)
-angle = 30                          # Degrees (minimum angle between plane normal and vector to water)
+# Filters vectors < 30º from the plane (since the normal is perpendicular, 90º - 30º = 60º)
+angle = 60                          # Degrees (maximum angle between plane normal and vector)
 
 # ---- Initialization ----
 
@@ -141,7 +142,7 @@ for frame in frames:
             theta_deg = math.degrees(math.acos(cos_theta))
 
             # Filtering criterion
-            if theta_deg < angle:
+            if theta_deg > angle:
                 continue
 
         # Signed distance to plane
