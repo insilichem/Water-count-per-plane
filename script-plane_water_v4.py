@@ -19,8 +19,8 @@ import math
 
 # ---- Configuration ----
 water_resname = "WAT"               # Residue name for water
-output_filename = "water_count_v4.txt"
-search_radius = 5.0                 # Angstroms (radius from plane centroid)
+output_filename = "water_count_v4-angle.txt"
+search_radius = 4.0                 # Angstroms (radius from plane centroid)
 # Filters vectors < 30º from the plane (since the normal is perpendicular, 90º - 30º = 60º)
 angle = 60                          # Degrees (maximum angle between plane normal and vector)
 
