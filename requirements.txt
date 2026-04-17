@@ -1,4 +1,7 @@
 # No external pip dependencies.
+# Software: UCSF Chimera 1.19 (Legacy Production Release, March 2025)
+# Python: Python 2.7 (Bundled with Chimera)
+# Dependencies: Standard Chimera modules (chimera, Molecule, runCommand)
 # Requires UCSF Chimera (internal 'chimera' module).
 
 
